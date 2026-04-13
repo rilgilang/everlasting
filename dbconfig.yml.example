@@ -1,0 +1,5 @@
+development:
+  dialect: postgres
+  datasource: host=localhost user=admin password=admin dbname=aicare_klondike_db sslmode=disable
+  dir: migration
+  table: migrations

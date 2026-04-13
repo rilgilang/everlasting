@@ -1,0 +1,48 @@
+# Code Editor
+.idea
+
+# Upload only bin folder
+bin/*
+!bin/.gitkeep
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+tmp/
+
+# CI related directory
+.ci/
+
+# Dotenv variable 
+.env
+
+# Docker related dir
+docker/rabbitmq/data/
+docker/rabbitmq/log/
+docker/redis
+
+# Binaries
+bin/
+
+# IDE related files
+.vscode/
+
+# Migration tool 
+dbconfig.yml
+
+# File log
+log/*
+
+# Docs
+docs/*

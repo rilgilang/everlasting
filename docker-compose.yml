@@ -1,0 +1,54 @@
+version: '3.7'
+
+services:
+  postgresql:
+    environment:
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_PASSWORD: ${POSTGRES_PASS}
+        POSTGRES_DB: ${POSTGRES_DB}
+    command: ["postgres", "-c", "log_statement=all"]
+    build:
+        context: ./docker/db
+    volumes:
+        - ./docker/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+        - "${POSTGRES_PORT}:5432"
+    networks:
+        - aicare-klondike-nt
+
+  redis:
+    container_name: aicare-klondike-redis
+    image: redis:latest
+    command: >
+          --requirepass ${REDIS_PASS}
+    volumes:
+      - './docker/redis:/data'
+    ports:
+      - ${REDIS_PORT}:6379
+    environment:
+      - TZ=Asia/Jakarta
+    networks:
+        - aicare-klondike-nt
+
+  rabbitmq:
+    container_name: 'aicare-klondike-rabbitmq'
+    build: 
+      context: ./docker/rabbitmq
+      dockerfile: Dockerfile
+    ports:
+      - ${RABBITMQ_PORT}:5672
+      - ${RABBITMQ_ADMINPORT}:15672
+    environment:
+      - TZ=Asia/Jakarta
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_VHOST=${RABBITMQ_VHOST}
+    volumes:
+      - ./docker/rabbitmq/data/:/var/lib/rabbitmq/mnesia/
+      - ./docker/rabbitmq/log/:/var/log/rabbitmq
+    networks:
+        - aicare-klondike-nt
+
+networks:
+  aicare-klondike-nt:
+      driver: bridge

@@ -1,0 +1,293 @@
+stages:
+  - coverage
+  - test
+  - sonarqube-vulnerability-report
+  - deploy
+  - assign-issue
+
+# GLOBAL VARIABLE CICD
+variables:
+  GITLAB_ADVANCED_SAST_ENABLED: 'true'
+
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Jobs/Dependency-Scanning.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+
+sast:
+  tags:
+    - shared-docker
+  variables:
+    SAST_EXCLUDED_ANALYZERS: bandit, brakeman, flawfinder, kubesec, phpcs-security-audit,
+      pmd-apex, security-code-scan, sobelow, spotbugs
+  stage: test
+
+# COVERAGE
+golang-coverage:
+  tags: 
+    - shared-docker
+  stage: coverage
+  image: 
+    name: golang:1.21.4-bullseye
+  script:
+    - go version
+    - go test ./src/domain/... --cover -coverprofile=coverage.out
+  artifacts:
+    paths:
+      - coverage.out
+  allow_failure: true
+  only:
+    - merge_requests
+    - master
+    - staging
+    - develop
+    - tags
+
+# SONARQUBE
+sonarqube-check:
+  stage: test
+  image: 
+    name: sonarsource/sonar-scanner-cli:latest
+    entrypoint: [""]
+  variables:
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+    GIT_DEPTH: "0"
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+      - .sonar/cache
+  script: 
+    - sh .ci/set-version.sh
+    - sonar-scanner
+  allow_failure: true
+  only:
+    - merge_requests
+    - master
+    - staging
+    - develop
+    - tags
+
+# SONARQUBE VULNERABILITY
+sonarqube-vulnerability-report:
+  stage: sonarqube-vulnerability-report
+  image: alpine:latest
+  script:
+    - 'apk add curl jq'
+    - 'curl -u "${SONAR_TOKEN}:" "${SONAR_HOST_URL}/api/issues/gitlab_sast_export?projectKey=the-hcp-project_aicare-klondike_AYzHoPH037Yp3kPKTNMQ&branch=${CI_COMMIT_BRANCH}&pullRequest=${CI_MERGE_REQUEST_IID}" -o gl-sast-sonar-report.json'
+    - 'jq . gl-sast-sonar-report.json'
+  allow_failure: true
+  only:
+    - merge_requests
+    - master
+    - staging
+    - develop
+    - tags
+  artifacts:
+    expire_in: 1 day
+    reports:
+      sast: gl-sast-sonar-report.json
+  dependencies:
+    - sonarqube-check
+
+
+# DEPLOY REVENUE SERVER DEV
+deploy-klondike-revenue-to-server-dev01:
+  stage: deploy
+  before_script:
+    - eval $(ssh-agent -s) && ssh-add ~/.ssh/gitlab-runner
+  script:
+    - cd /home/gitlab-runner/ai-care-playbooks
+    - ansible-playbook playbook-deploy/09-deploy-aicare-klondike-revenue.yml -e "releases_from=${CI_COMMIT_SHORT_SHA}" -l ${SERVER_DEV01}
+  only:
+    - develop
+  tags:
+    - getih
+  when: manual
+  dependencies: []
+  environment:
+    name: dev01-revenue
+    url: https://dev01-klondike-revenue.digitalsekuriti.id
+
+# DEPLOY REFUND SERVER DEV
+deploy-klondike-refund-to-server-dev01:
+  stage: deploy
+  before_script:
+    - eval $(ssh-agent -s) && ssh-add ~/.ssh/gitlab-runner
+  script:
+    - cd /home/gitlab-runner/ai-care-playbooks
+    - ansible-playbook playbook-deploy/10-deploy-aicare-klondike-refund.yml -e "releases_from=${CI_COMMIT_SHORT_SHA}" -l ${SERVER_DEV01}
+  only:
+    - develop
+  tags:
+    - getih
+  when: manual
+  dependencies: []
+  environment:
+    name: dev01-refund
+    url: https://dev01-klondike-refund.digitalsekuriti.id
+
+# DEPLOY REVENUE SERVER TESTING01
+deploy-klondike-revenue-to-server-test01:
+  stage: deploy
+  before_script:
+    - eval $(ssh-agent -s) && ssh-add ~/.ssh/gitlab-runner
+  script:
+    - cd /home/gitlab-runner/ai-care-playbooks
+    - ansible-playbook playbook-deploy/09-deploy-aicare-klondike-revenue.yml -e "releases_from=${CI_COMMIT_SHORT_SHA}" -l ${SERVER_TEST01}
+  only:
+    - branches
+  except:
+    - master
+    - tags
+  tags:
+    - getih
+  when: manual
+  dependencies: []
+  environment:
+    name: test01-revenue
+    url: https://test01-klondike-revenue.digitalsekuriti.id
+
+# DEPLOY REFUND SERVER TESTING01
+deploy-klondike-refund-to-server-test01:
+  stage: deploy
+  before_script:
+    - eval $(ssh-agent -s) && ssh-add ~/.ssh/gitlab-runner
+  script:
+    - cd /home/gitlab-runner/ai-care-playbooks
+    - ansible-playbook playbook-deploy/10-deploy-aicare-klondike-refund.yml -e "releases_from=${CI_COMMIT_SHORT_SHA}" -l ${SERVER_TEST01}
+  only:
+    - branches
+  except:
+    - master
+    - tags
+  tags:
+    - getih
+  when: manual
+  dependencies: []
+  environment:
+    name: test01-refund
+    url: https://test01-klondike-refund.digitalsekuriti.id
+
+# DEPLOY SERVER TESTING02
+deploy-klondike-revenue-to-server-test02:
+  stage: deploy
+  before_script:
+    - eval $(ssh-agent -s) && ssh-add ~/.ssh/gitlab-runner
+  script:
+    - cd /home/gitlab-runner/ai-care-playbooks
+    - ansible-playbook playbook-deploy/09-deploy-aicare-klondike-revenue.yml -e "releases_from=${CI_COMMIT_SHORT_SHA}" -l ${SERVER_TEST02}
+  only:
+    - branches
+  except:
+    - master
+    - tags
+  tags:
+    - getih
+  when: manual
+  dependencies: []
+  environment:
+    name: test02-revenue
+    url: https://test02-klondike-revenue.digitalsekuriti.id
+
+# DEPLOY SERVER TESTING02
+deploy-klondike-refund-to-server-test02:
+  stage: deploy
+  before_script:
+    - eval $(ssh-agent -s) && ssh-add ~/.ssh/gitlab-runner
+  script:
+    - cd /home/gitlab-runner/ai-care-playbooks
+    - ansible-playbook playbook-deploy/10-deploy-aicare-klondike-refund.yml -e "releases_from=${CI_COMMIT_SHORT_SHA}" -l ${SERVER_TEST02}
+  only:
+    - branches
+  except:
+    - master
+    - tags
+  tags:
+    - getih
+  when: manual
+  dependencies: []
+  environment:
+    name: test02-revenue
+    url: https://test02-klondike-refund.digitalsekuriti.id
+
+# DEPLOY SERVER STAGING
+deploy-klondike-revenue-staging:
+  stage: deploy
+  before_script:
+    - eval $(ssh-agent -s) && ssh-add ~/.ssh/gitlab-runner
+  script:
+    - cd /home/gitlab-runner/ai-care-playbooks
+    - ansible-playbook playbook-deploy/09-deploy-aicare-klondike-revenue.yml -e "releases_from=${CI_COMMIT_SHORT_SHA}" -l ${SERVER_STG_MARKETPLACE}
+  only:
+    - staging
+  tags:
+    - getih
+  dependencies: []
+  when: manual
+  environment:
+    name: staging
+    url: https://klondike-revenue-stg.digitalsekuriti.id
+
+# DEPLOY SERVER STAGING
+deploy-klondike-refund-staging:
+  stage: deploy
+  before_script:
+    - eval $(ssh-agent -s) && ssh-add ~/.ssh/gitlab-runner
+  script:
+    - cd /home/gitlab-runner/ai-care-playbooks
+    - ansible-playbook playbook-deploy/10-deploy-aicare-klondike-refund.yml -e "releases_from=${CI_COMMIT_SHORT_SHA}" -l ${SERVER_STG_MARKETPLACE}
+  only:
+    - staging
+  tags:
+    - getih
+  dependencies: []
+  when: manual
+  environment:
+    name: staging-refund
+    url: https://klondike-refund-stg.digitalsekuriti.id
+
+# DEPLOY SERVER PRODUCTION
+deploy-klondike-revenue-production:
+  stage: deploy
+  before_script:
+    - eval $(ssh-agent -s) && ssh-add ~/.ssh/gitlab-runner
+  script:
+    - cd /home/gitlab-runner/ai-care-playbooks
+    - ansible-playbook playbook-deploy/09-deploy-aicare-klondike-revenue.yml -e "releases_from=${CI_COMMIT_TAG}"  -l ${SERVER_PRODUCTION_CORE}
+  only:
+    - tags
+  tags:
+    - getih
+  when: manual
+  dependencies: []
+  environment:
+    name: production-revenue
+    url: https://klondike-revenue.ai-care.id
+
+# DEPLOY SERVER PRODUCTION
+deploy-klondike-refund-production:
+  stage: deploy
+  before_script:
+    - eval $(ssh-agent -s) && ssh-add ~/.ssh/gitlab-runner
+  script:
+    - cd /home/gitlab-runner/ai-care-playbooks
+    - ansible-playbook playbook-deploy/10-deploy-aicare-klondike-refund.yml -e "releases_from=${CI_COMMIT_TAG}"  -l ${SERVER_PRODUCTION_CORE}
+  only:
+    - tags
+  tags:
+    - getih
+  when: manual
+  dependencies: []
+  environment:
+    name: production-refund
+    url: https://klondike-refund.ai-care.id
+
+# ASSIGN VULNERABILITY ISSUE
+assigning-vuln-issues:
+  stage: assign-issue
+  image: scm.getih.net:5050/it-support/automation-vulnerability-report:latest
+  script:
+    - python /app/main.py -t ${VULN_GITLAB_TOKEN} -pid ${CI_PROJECT_ID} -u ${CI_SERVER_URL}
+  rules:
+    - if: $CI_COMMIT_REF_PROTECTED
+  dependencies: []
