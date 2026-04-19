@@ -56,6 +56,8 @@ type Config struct {
 	LogSplunkSourceTypeApp string `mapstructure:"LOG_SPLUNK_SOURCE_TYPE_APP"`
 	LogSplunkSourceTypeTdr string `mapstructure:"LOG_SPLUNK_SOURCE_TYPE_TDR"`
 
+	WebsocketURL string `mapstructure:"WEBSOCKET_URL"`
+
 	CORSAllowedDomain string `mapstructure:"CORS_ALLOWED_DOMAIN"`
 
 	KeyTokenGenerator string `mapstructure:"KEY_TOKEN_GENERATOR"`

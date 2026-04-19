@@ -213,7 +213,7 @@ func loadPkg(builder *di.Builder, config *pkg.Config) {
 				logger := ctn.Get("logger.app").(*logger.AppLogger)
 
 				// Connect to the server
-				url := "wss://s13783.blr1.piesocket.com/v3/1?api_key=7SEqHklfXLf4YSvF8OmgAd147ewDT0RT2tZrCE3f&notify_self=1"
+				url := config.WebsocketURL
 				c, _, err := websocket.Dial(context.Background(), url, nil)
 				if err != nil {
 					log.Fatal(err)

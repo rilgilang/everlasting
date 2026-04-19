@@ -23,5 +23,6 @@ func (s *WebSocketClient) Write(ctx context.Context, message []byte) error {
 		s.logger.Error(ctx, "websocket_client", err.Error())
 		return err
 	}
+
 	return nil
 }

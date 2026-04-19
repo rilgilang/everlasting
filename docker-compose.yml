@@ -5,9 +5,24 @@ services:
     container_name: everlasting-api
     build:
       context: .
-      dockerfile: Dockerfile  # Optional if named 'Dockerfile'
+      dockerfile: Dockerfile
+    ports:
+      - "${APP_PORT:-8080}:${APP_PORT:-8080}"
+    volumes:
+      - ./.env:/root/.env:ro
+    depends_on:
+      - postgresql
+      - redis
+      - rabbitmq
+      - minio_latest
+    networks:
+      - everlasting-nt
+    restart: unless-stopped
+    # Override command if needed
+    command: [ "dashboard" ]  # This matches your Dockerfile CMD
 
   postgresql:
+    container_name: everlasting-postgres
     environment:
         POSTGRES_USER: ${POSTGRES_USER}
         POSTGRES_PASSWORD: ${POSTGRES_PASS}
