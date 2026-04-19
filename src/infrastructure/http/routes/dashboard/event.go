@@ -129,6 +129,32 @@ func getEventList(c echo.Context) (err error) {
 	})
 }
 
+func getWishingWallMessage(c echo.Context) (err error) {
+	defer c.Request().Body.Close()
+
+	// Load container
+	var (
+		container              = c.Get(string(middleware.MiddlewareValueContainer)).(di.Container)
+		wishingWallMessageRepo = container.Get("persistence.wishing_wall_message").(*persistence.WishingWallMessagePersistence)
+	)
+
+	cc := c.Get(string(middleware.MiddlewareValueAppLoggerContext)).(*logger.AppLoggerContext)
+	ctx := cc.GetContext()
+
+	id := c.Param("id")
+	if id == "" {
+		return c.String(http.StatusInternalServerError, "ID should not be empty")
+	}
+
+	eventId := event.EventID(id)
+	result, err := eventId.GetAllMessages(ctx, wishingWallMessageRepo)
+
+	if err != nil {
+		return err
+	}
+	return routes.JsonResponse(c, result, "Ok", "ok", 201, nil)
+}
+
 func RegisterEventRoutes(container di.Container, server *echo.Group) {
 	event := server.Group("/event")
 	//event.Use(middleware.BearerAdminAuthenticationMiddleware)
@@ -138,4 +164,5 @@ func RegisterEventRoutes(container di.Container, server *echo.Group) {
 	event.GET("/:id", getEventDetailHandler)
 	event.POST("", createEventHandler)
 	event.GET("", getEventList)
+	event.GET("/:id/wishing-wall", getWishingWallMessage)
 }

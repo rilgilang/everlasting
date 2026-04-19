@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"everlasting/src/domain/event"
-	"everlasting/src/domain/sharedkernel/identity"
 	"everlasting/src/domain/sharedkernel/unitofwork"
 	"everlasting/src/infrastructure/pkg/logger"
 	"time"
@@ -73,9 +72,9 @@ func (w *WishingWallMessagePersistence) Create(ctx context.Context, message *eve
 }
 
 // GetAllByEventID retrieves all wishing wall messages by event ID
-func (w *WishingWallMessagePersistence) GetAllByEventID(ctx context.Context, id identity.ID) ([]event.WishingWallMessage, error) {
+func (w *WishingWallMessagePersistence) GetAllByEventID(ctx context.Context, id string) ([]event.WishingWallMessage, error) {
 	query := `SELECT 
-		name, message, photo, created_at, updated_at 
+		id, name, message, photo, created_at, updated_at 
 	FROM 
 		wishing_wall_message 
 	WHERE 
@@ -104,6 +103,7 @@ func (w *WishingWallMessagePersistence) GetAllByEventID(ctx context.Context, id 
 	for rows.Next() {
 		var message event.WishingWallMessage
 		err := rows.Scan(
+			&message.ID,
 			&message.Name,
 			&message.Message,
 			&message.Photo,

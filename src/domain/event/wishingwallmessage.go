@@ -61,3 +61,7 @@ func (ww *WishingWallInput) SaveMessage(ctx context.Context, repository WishingW
 
 	return repository.Create(ctx, &message)
 }
+
+func (id *EventID) GetAllMessages(ctx context.Context, repository WishingWallMessageRepository) ([]WishingWallMessage, error) {
+	return repository.GetAllByEventID(ctx, string(*id))
+}
