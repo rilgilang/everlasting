@@ -14,10 +14,25 @@ services:
     ports:
         - "${POSTGRES_PORT}:5432"
     networks:
-        - aicare-klondike-nt
+        - everlasting-nt
+
+  minio_latest:
+    container_name: everlasting-minio
+    image: minio/minio:latest
+    ports:
+      - "${MINIO_SVC_PORT}:9000"
+      - "${MINIO_CONSOLE_PORT}:9001"
+    volumes:
+      - "./docker/minio:/data"
+    networks:
+      - aicare-marketplace-nt
+    environment:
+      - MINIO_ROOT_USER=${MINIO_CONSOLE_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_CONSOLE_PASSWORD}
+    command: server /data --console-address ":9001"
 
   redis:
-    container_name: aicare-klondike-redis
+    container_name: everlasting-redis
     image: redis:latest
     command: >
           --requirepass ${REDIS_PASS}
@@ -28,10 +43,10 @@ services:
     environment:
       - TZ=Asia/Jakarta
     networks:
-        - aicare-klondike-nt
+        - everlasting-nt
 
   rabbitmq:
-    container_name: 'aicare-klondike-rabbitmq'
+    container_name: 'everlasting-rabbitmq'
     build: 
       context: ./docker/rabbitmq
       dockerfile: Dockerfile
@@ -47,8 +62,8 @@ services:
       - ./docker/rabbitmq/data/:/var/lib/rabbitmq/mnesia/
       - ./docker/rabbitmq/log/:/var/log/rabbitmq
     networks:
-        - aicare-klondike-nt
+        - everlasting-nt
 
 networks:
-  aicare-klondike-nt:
+  everlasting-nt:
       driver: bridge
