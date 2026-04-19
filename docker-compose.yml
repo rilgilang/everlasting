@@ -1,6 +1,12 @@
 version: '3.7'
 
 services:
+  backend:
+    container_name: everlasting-api
+    build:
+      context: .
+      dockerfile: Dockerfile  # Optional if named 'Dockerfile'
+
   postgresql:
     environment:
         POSTGRES_USER: ${POSTGRES_USER}
