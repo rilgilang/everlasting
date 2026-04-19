@@ -9,6 +9,10 @@ RUN go mod download
 
 # Copy source and build
 COPY . .
+
+# Run swagger docs
+RUN swag init --dir ./src/infrastructure/http/routes/dashboard --parseDependency true
+
 # We name the binary 'myapp'
 RUN CGO_ENABLED=0 GOOS=linux go build -o everlasting .
 
@@ -19,9 +23,6 @@ WORKDIR /root/
 
 # Copy the binary from the builder stage
 COPY --from=builder /app/everlasting .
-
-# Run swagger docs
-RUN swag init --dir ./src/infrastructure/http/routes/dashboard --parseDependency true
 
 RUN touch .env
 
