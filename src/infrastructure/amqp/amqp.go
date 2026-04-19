@@ -42,8 +42,8 @@ type (
 	}
 )
 
-var DEFAULT_QUEUE_NAME = "aicare_marketplace_queue"
-var DEFAULT_EXCHANGE_NAME = "aicare_marketplace_exchange"
+var DEFAULT_QUEUE_NAME = "everlasting_queue"
+var DEFAULT_EXCHANGE_NAME = "everlasting_exchange"
 var DEFAULT_EXCHANGE_TYPE = "x-delayed-message"
 var DEFAULT_EXCHANGE_ARGS = amqpDriver.Table{
 	"x-delayed-type": "direct",

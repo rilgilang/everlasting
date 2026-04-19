@@ -3,7 +3,12 @@ package bootstrap
 import (
 	"context"
 	"crypto/tls"
+	minioStorage "everlasting/src/infrastructure/pkg/storage"
+	websocketPkg "everlasting/src/infrastructure/pkg/websocket"
 	"fmt"
+	"github.com/coder/websocket"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	"log"
 
 	"everlasting/src/infrastructure/amqp"
@@ -42,6 +47,19 @@ func loadPersistence(builder *di.Builder, config *pkg.Config) {
 			Build: func(ctn di.Container) (interface{}, error) {
 				// Connect to persistence
 				transactionPersistence := persistence.NewUserPersistence(
+					ctn.Get("adapter.postgres").(*sqlx.DB),
+					ctn.Get("logger.app").(*logger.AppLogger),
+				)
+
+				return transactionPersistence, nil
+			},
+		},
+		{
+			Name:  "persistence.wishing_wall_message",
+			Scope: di.App,
+			Build: func(ctn di.Container) (interface{}, error) {
+				// Connect to persistence
+				transactionPersistence := persistence.NewWishingWallMessagePersistence(
 					ctn.Get("adapter.postgres").(*sqlx.DB),
 					ctn.Get("logger.app").(*logger.AppLogger),
 				)
@@ -152,6 +170,58 @@ func loadPkg(builder *di.Builder, config *pkg.Config) {
 				}
 				renderer := pkg.NewHtmlRenderer(templateDir)
 				return renderer, nil
+			},
+		},
+		{
+			Name:  "pkg.storage.minio",
+			Scope: di.App,
+			Build: func(ctn di.Container) (interface{}, error) {
+				logger := ctn.Get("logger.app").(*logger.AppLogger)
+
+				endpoint := config.MinioHost
+				if config.MinioSVCPort != "" {
+					endpoint = fmt.Sprintf("%s:%s", config.MinioHost, config.MinioSVCPort)
+				}
+
+				accessKey := config.MinioAccessKey
+				secretAccessKey := config.MinioAccessSecret
+
+				// Initialize minio client object.
+				minioClient, err := minio.New(endpoint, &minio.Options{
+					Creds:  credentials.NewStaticV4(accessKey, secretAccessKey, ""),
+					Secure: config.MinioSecure,
+				})
+
+				minioClient.MakeBucket(context.Background(), "wishing-wall", minio.MakeBucketOptions{
+					Region:        "",
+					ObjectLocking: false,
+					ForceCreate:   false,
+				})
+
+				if err != nil {
+					log.Printf("Error while initialize minio storage adapter. Detail: %s", err.Error())
+					return nil, err
+				}
+				storage := minioStorage.NewMinioStorage(minioClient, logger)
+				return storage, nil
+			},
+		},
+		{
+			Name:  "pkg.websocket.client",
+			Scope: di.App,
+			Build: func(ctn di.Container) (interface{}, error) {
+				logger := ctn.Get("logger.app").(*logger.AppLogger)
+
+				// Connect to the server
+				url := "wss://s13783.blr1.piesocket.com/v3/1?api_key=7SEqHklfXLf4YSvF8OmgAd147ewDT0RT2tZrCE3f&notify_self=1"
+				c, _, err := websocket.Dial(context.Background(), url, nil)
+				if err != nil {
+					log.Fatal(err)
+				}
+				//defer c.Close(websocket.StatusNormalClosure, "")
+
+				client := websocketPkg.NewWebSocketClient(c, logger)
+				return client, nil
 			},
 		},
 	}...)

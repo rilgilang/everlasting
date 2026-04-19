@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"everlasting/src/domain/event"
+	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"time"
 
@@ -27,7 +28,7 @@ func NewEventPersistence(db *sqlx.DB, logger *logger.AppLogger) (result *EventPe
 // GetOneByID retrieves an event by its ID
 func (e *EventPersistence) GetOneByID(ctx context.Context, id identity.ID) (*event.Event, error) {
 	query := `SELECT 
-		id, title, description, 'date', 'time', location,
+		id, title, description, date, time, location,
 		category, messages, max_messages, image, status,
 		organizer, created_at, updated_at 
 	FROM 
@@ -147,6 +148,7 @@ func (e *EventPersistence) Create(ctx context.Context, event *event.Event) (*eve
 
 // Update updates an existing event
 func (e *EventPersistence) Update(ctx context.Context, event *event.Event) (*event.Event, error) {
+	fmt.Println("date --> ", event.Date)
 	now := time.Now().UTC()
 	query := `UPDATE 
 		events
@@ -168,9 +170,9 @@ func (e *EventPersistence) Update(ctx context.Context, event *event.Event) (*eve
 
 	vals := []interface{}{
 		event.ID,
-		event.Date,
 		event.Title,
 		event.Description,
+		event.Date,
 		event.Time,
 		event.Location,
 		event.Category,

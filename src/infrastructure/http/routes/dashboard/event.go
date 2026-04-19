@@ -46,7 +46,7 @@ func updateEventHandler(c echo.Context) (err error) {
 	// Load container
 	var (
 		container       = c.Get(string(middleware.MiddlewareValueContainer)).(di.Container)
-		eventRepository = container.Get("persistence.user").(*persistence.EventPersistence)
+		eventRepository = container.Get("persistence.event").(*persistence.EventPersistence)
 	)
 
 	cc := c.Get(string(middleware.MiddlewareValueAppLoggerContext)).(*logger.AppLoggerContext)
@@ -67,6 +67,31 @@ func updateEventHandler(c echo.Context) (err error) {
 	}
 
 	result, err := updateEvent.UpdateTo(ctx, eventRepository, event.EventID(id))
+
+	if err != nil {
+		return err
+	}
+	return routes.JsonResponse(c, result, "Ok", "ok", 201, nil)
+}
+
+func getEventDetailHandler(c echo.Context) (err error) {
+	defer c.Request().Body.Close()
+
+	// Load container
+	var (
+		container       = c.Get(string(middleware.MiddlewareValueContainer)).(di.Container)
+		eventRepository = container.Get("persistence.event").(*persistence.EventPersistence)
+	)
+
+	cc := c.Get(string(middleware.MiddlewareValueAppLoggerContext)).(*logger.AppLoggerContext)
+	ctx := cc.GetContext()
+
+	id := event.EventID(c.Param("id"))
+	if id == "" {
+		return c.String(http.StatusInternalServerError, "ID should not be empty")
+	}
+
+	result, err := id.GetByID(ctx, eventRepository)
 
 	if err != nil {
 		return err
@@ -106,10 +131,11 @@ func getEventList(c echo.Context) (err error) {
 
 func RegisterEventRoutes(container di.Container, server *echo.Group) {
 	event := server.Group("/event")
-	event.Use(middleware.BearerAdminAuthenticationMiddleware)
+	//event.Use(middleware.BearerAdminAuthenticationMiddleware)
 
 	//event.GET("/:id", getUserByIDHandler)
-	event.PUT("/:id", updateEventHandler)
+	event.PATCH("/:id", updateEventHandler)
+	event.GET("/:id", getEventDetailHandler)
 	event.POST("", createEventHandler)
 	event.GET("", getEventList)
 }

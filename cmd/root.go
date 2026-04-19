@@ -39,6 +39,13 @@ func Execute() {
 				http.RunDashboardAPI(container, config)
 			},
 		},
+		{
+			Use:   "socket",
+			Short: "Run HTTP SocketIO Server For Partner App",
+			Run: func(cmd *cobra.Command, args []string) {
+				http.RunSocket()
+			},
+		},
 	}
 
 	rootCmd.AddCommand(cmd...)

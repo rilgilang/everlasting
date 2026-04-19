@@ -46,6 +46,31 @@ func getUserByIDHandler(c echo.Context) (err error) {
 	return routes.JsonResponse(c, result, "Ok", "ok", 200, nil)
 }
 
+func getCurrentUser(c echo.Context) (err error) {
+	defer c.Request().Body.Close()
+
+	// Load container
+	var (
+		container      = c.Get(string(middleware.MiddlewareValueContainer)).(di.Container)
+		userRepository = container.Get("persistence.user").(*persistence.UserPersistence)
+		id             = c.Get("user_id").(string)
+	)
+
+	cc := c.Get(string(middleware.MiddlewareValueAppLoggerContext)).(*logger.AppLoggerContext)
+	ctx := cc.GetContext()
+
+	if id == "" {
+		return c.String(http.StatusInternalServerError, "ID should not be empty")
+	}
+
+	result, err := user.UserID(id).GetDetailFrom(ctx, userRepository)
+
+	if err != nil {
+		return err
+	}
+	return routes.JsonResponse(c, result, "Ok", "ok", 200, nil)
+}
+
 // Create user
 //
 //	@Security		BearerAuth
@@ -187,6 +212,7 @@ func RegisterUserRoutes(container di.Container, server *echo.Group) {
 	user.Use(middleware.BearerAuthenticationMiddleware)
 
 	user.GET("/:id", getUserByIDHandler)
+	user.GET("/me", getCurrentUser)
 	user.PUT("/:id", updateUserHandler)
 	user.POST("", createUserHandler)
 	user.GET("", getUserListHandler)

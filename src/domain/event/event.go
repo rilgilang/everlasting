@@ -90,8 +90,10 @@ func (e *EventInput) UpdateTo(ctx context.Context, repository EventRepository, e
 	now := time.Now()
 
 	return repository.Update(ctx, &Event{
+		ID:          string(eventId),
 		Title:       e.Title,
 		Description: e.Description,
+		Date:        e.Date,
 		Time:        e.Time,
 		Location:    e.Location,
 		Category:    e.Category,

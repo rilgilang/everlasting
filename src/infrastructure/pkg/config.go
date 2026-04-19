@@ -30,6 +30,12 @@ type Config struct {
 	RabbitMQVhost     string `mapstructure:"RABBITMQ_VHOST"`
 	RabbitMQQueueName string `mapstructure:"RABBITMQ_QUEUENAME"`
 
+	MinioHost         string `mapstructure:"MINIO_HOST"`
+	MinioSVCPort      string `mapstructure:"MINIO_SVC_PORT"`
+	MinioAccessKey    string `mapstructure:"MINIO_ACCESS_KEY"`
+	MinioAccessSecret string `mapstructure:"MINIO_ACCESS_SECRET"`
+	MinioSecure       bool   `mapstructure:"MINIO_SECURE"`
+
 	SMTPEmailFrom string `mapstructure:"SMTP_EMAIL_FROM"`
 	SMTPHost      string `mapstructure:"SMTP_HOST"`
 	SMTPPort      uint32 `mapstructure:"SMTP_PORT"`

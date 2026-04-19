@@ -28,10 +28,11 @@ const (
 type UserInput struct {
 	Email Email  `json:"email" validate:"required,email"`
 	Name  string `json:"name" validate:"required"`
+	Role  string `json:"role" validate:"required,oneof=user user-assistant"`
 }
 
 func (ui *UserInput) SaveTo(ctx context.Context, repo UserRepository) (result *User, err error) {
-	return NewUser(ui.Name, ui.Email).SaveTo(ctx, repo)
+	return NewUser(ui.Name, ui.Email, UserRole(ui.Role)).SaveTo(ctx, repo)
 }
 
 func (ui *UserInput) UpdateTo(ctx context.Context, repo UserRepository, id UserID) (result *User, err error) {
@@ -60,13 +61,13 @@ type User struct {
 	CipherText CipherText         `json:"-"`
 }
 
-func NewUser(name string, email Email) *User {
+func NewUser(name string, email Email, role UserRole) *User {
 	now := marshaler.JsonTime(time.Now())
 	return &User{
 		ID:        identity.NewID(),
 		Email:     email,
 		Name:      name,
-		Role:      UserRoleAdmin,
+		Role:      role,
 		Status:    UserStatusActive,
 		CreatedAt: now,
 		UpdatedAt: now,

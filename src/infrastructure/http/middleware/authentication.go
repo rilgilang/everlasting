@@ -47,7 +47,7 @@ func BearerAuthenticationMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusUnauthorized, MESSAGE_INVALID_HEADER)
 		}
 
-		c.Set("user_id", user)
+		c.Set("user_id", user.ID.String())
 
 		// Continue to the next handler
 		return next(c)

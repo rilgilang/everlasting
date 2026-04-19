@@ -12,3 +12,8 @@ type EventRepository interface {
 	Update(ctx context.Context, event *Event) (*Event, error)
 	GetByQuery(ctx context.Context, query *Query) (*Events, error)
 }
+
+type WishingWallMessageRepository interface {
+	Create(ctx context.Context, message *WishingWallMessage) (*WishingWallMessage, error)
+	GetAllByEventID(ctx context.Context, id identity.ID) ([]WishingWallMessage, error)
+}
