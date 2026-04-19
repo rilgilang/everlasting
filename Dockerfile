@@ -20,8 +20,8 @@ WORKDIR /root/
 # Copy the binary from the builder stage
 COPY --from=builder /app/everlasting .
 
-# Copy generated docs (if needed)
-COPY --from=builder /app/docs ./docs
+# Run swagger docs
+RUN swag init --dir ./src/infrastructure/http/routes/dashboard --parseDependency true
 
 RUN touch .env
 
