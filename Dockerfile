@@ -20,6 +20,11 @@ WORKDIR /root/
 # Copy the binary from the builder stage
 COPY --from=builder /app/everlasting .
 
+# Copy generated docs (if needed)
+COPY --from=builder /app/docs ./docs
+
+RUN touch .env
+
 # This sets the executable to run
 ENTRYPOINT ["./everlasting"]
 
