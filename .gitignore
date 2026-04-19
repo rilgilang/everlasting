@@ -45,4 +45,4 @@ dbconfig.yml
 log/*
 
 # Docs
-docs/*
+#docs/*

@@ -10,9 +10,6 @@ RUN go mod download
 # Copy source and build
 COPY . .
 
-# Run swagger docs
-RUN swag init --dir ./src/infrastructure/http/routes/dashboard --parseDependency true
-
 # We name the binary 'myapp'
 RUN CGO_ENABLED=0 GOOS=linux go build -o everlasting .
 
