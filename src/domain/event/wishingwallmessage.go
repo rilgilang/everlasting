@@ -54,10 +54,7 @@ func (ww *WishingWallInput) SaveMessage(ctx context.Context, repository WishingW
 		return nil, err
 	}
 
-	err = socketClient.Write(ctx, msgByte)
-	if err != nil {
-		return nil, err
-	}
+	socketClient.Write(msgByte)
 
 	return repository.Create(ctx, &message)
 }
