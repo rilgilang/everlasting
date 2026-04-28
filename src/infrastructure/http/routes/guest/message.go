@@ -2,6 +2,7 @@ package guest
 
 import (
 	"everlasting/src/domain/event"
+	"everlasting/src/domain/sharedkernel/messagebroker"
 	"everlasting/src/domain/sharedkernel/photo"
 	"everlasting/src/domain/validator"
 	"everlasting/src/infrastructure/http/middleware"
@@ -9,7 +10,6 @@ import (
 	"everlasting/src/infrastructure/persistence"
 	"everlasting/src/infrastructure/pkg/logger"
 	minio "everlasting/src/infrastructure/pkg/storage"
-	ws "everlasting/src/infrastructure/pkg/websocket"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/sarulabs/di"
@@ -28,8 +28,7 @@ func wishingWallMessage(c echo.Context) (err error) {
 		container                = c.Get(string(middleware.MiddlewareValueContainer)).(di.Container)
 		wishingMessageRepository = container.Get("persistence.wishing_wall_message").(*persistence.WishingWallMessagePersistence)
 		storage                  = container.Get("pkg.storage.minio").(*minio.MinioStorage)
-		//broker                   = container.Get("pkg.messagebroker.amqp").(messagebroker.MessageBroker)
-		websocket = container.Get("pkg.websocket.client").(*ws.WebSocketClient)
+		broker                   = container.Get("pkg.messagebroker.amqp").(messagebroker.MessageBroker)
 	)
 
 	cc := c.Get(string(middleware.MiddlewareValueAppLoggerContext)).(*logger.AppLoggerContext)
@@ -97,7 +96,7 @@ func wishingWallMessage(c echo.Context) (err error) {
 	message.EventID = id
 	message.Photo = photoFile
 
-	wishWallMessage, err := message.SaveMessage(ctx, wishingMessageRepository, storage, websocket)
+	wishWallMessage, err := message.SaveMessage(ctx, wishingMessageRepository, storage, broker)
 	if err != nil {
 		return err
 	}

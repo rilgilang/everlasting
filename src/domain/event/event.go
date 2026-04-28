@@ -3,8 +3,11 @@ package event
 import (
 	"context"
 	"everlasting/src/domain/sharedkernel/identity"
+	"everlasting/src/domain/sharedkernel/messagebroker"
 	"time"
 )
+
+const TaskSendWishingWallMessage messagebroker.TaskName = "send_wishing_wall_message"
 
 type (
 	EventID string

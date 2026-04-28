@@ -3,7 +3,6 @@ package http
 import (
 	_ "everlasting/docs"
 	"everlasting/src/domain/validator"
-	"everlasting/src/infrastructure/amqp"
 	md "everlasting/src/infrastructure/http/middleware"
 	"everlasting/src/infrastructure/http/routes/dashboard"
 	"everlasting/src/infrastructure/http/routes/guest"
@@ -61,7 +60,7 @@ func RunDashboardAPI(container di.Container, config *pkg.Config) {
 	//dashboard.RegisterResetPasswordRoutes(container, api)
 
 	// Register message broker handler
-	go amqp.Consume(container, config)
+	//go amqp.Consume(container, config)
 
 	// Start server
 	server.Logger.Fatal(server.Start(fmt.Sprintf(":%d", config.AppPort)))
