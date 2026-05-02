@@ -43,7 +43,7 @@ func (ww *WishingWallInput) SaveMessage(ctx context.Context, repository WishingW
 		ID:      identity.NewID().String(),
 		Name:    ww.Name,
 		Message: ww.Message,
-		Photo:   "dir",
+		Photo:   dir,
 		EventID: ww.EventID,
 	}
 
