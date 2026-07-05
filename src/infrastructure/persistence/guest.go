@@ -187,13 +187,13 @@ func (g *GuestPersistence) GetByQuery(ctx context.Context, query *guest.Query) (
 	q = g.applySorting(q, query)
 	q = q.PlaceholderFormat(sq.Dollar)
 
-	sql, args, err := q.ToSql()
+	toSql, args, err := q.ToSql()
 	if err != nil {
 		g.logger.Error(ctx, "postgres:guest_get_by_query", err.Error())
 		return nil, err
 	}
 
-	stmt, err := g.generateStatement(ctx, sql)
+	stmt, err := g.generateStatement(ctx, toSql)
 	if err != nil {
 		g.logger.Error(ctx, "postgres:guest_get_by_query", err.Error())
 		return nil, err
@@ -210,7 +210,7 @@ func (g *GuestPersistence) GetByQuery(ctx context.Context, query *guest.Query) (
 	collection := make([]guest.Guest, 0)
 	for rows.Next() {
 		var gd guest.Guest
-		var lastInvitationSent time.Time
+		var lastInvitationSent sql.NullTime
 		if err := rows.Scan(
 			&gd.ID, &gd.EventId, &gd.Name,
 			&gd.PhoneNumber, &gd.Address,
@@ -220,8 +220,8 @@ func (g *GuestPersistence) GetByQuery(ctx context.Context, query *guest.Query) (
 			g.logger.Error(ctx, "postgres:guest_get_by_query", err.Error())
 			return nil, err
 		}
-		if !lastInvitationSent.IsZero() {
-			gd.LastInvitationSent = &lastInvitationSent
+		if lastInvitationSent.Valid {
+			gd.LastInvitationSent = &lastInvitationSent.Time
 		}
 		collection = append(collection, gd)
 	}
