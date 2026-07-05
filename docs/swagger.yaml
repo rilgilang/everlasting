@@ -171,14 +171,18 @@ definitions:
         type: string
       name:
         type: string
+      password:
+        type: string
       role:
         enum:
-        - user
-        - user-assistant
+        - admin
+        - bride
+        - event_organizer
         type: string
     required:
     - email
     - name
+    - password
     - role
     type: object
 info:

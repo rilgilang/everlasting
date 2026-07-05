@@ -31,6 +31,7 @@ tmp/
 docker/rabbitmq/data/
 docker/rabbitmq/log/
 docker/redis
+docker/minio
 
 # Binaries
 bin/

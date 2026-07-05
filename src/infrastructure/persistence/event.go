@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"everlasting/src/domain/event"
-	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"time"
 
@@ -148,7 +147,6 @@ func (e *EventPersistence) Create(ctx context.Context, event *event.Event) (*eve
 
 // Update updates an existing event
 func (e *EventPersistence) Update(ctx context.Context, event *event.Event) (*event.Event, error) {
-	fmt.Println("date --> ", event.Date)
 	now := time.Now().UTC()
 	query := `UPDATE 
 		events

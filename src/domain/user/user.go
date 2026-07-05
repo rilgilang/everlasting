@@ -20,15 +20,22 @@ const (
 	UserStatusActive   UserStatus = "active"
 	UserStatusInactive UserStatus = "inactive"
 
-	UserRoleuser  UserRole = "user"
+	UserRoleBride UserRole = "bride"
+	UserRoleEO    UserRole = "event_orginizer"
 	UserRoleAdmin UserRole = "admin"
 )
 
+type LoginInput struct {
+	Email    Email    `json:"email" validate:"required,email"`
+	Password Password `json:"password" validate:"required"`
+}
+
 // User Input
 type UserInput struct {
-	Email Email  `json:"email" validate:"required,email"`
-	Name  string `json:"name" validate:"required"`
-	Role  string `json:"role" validate:"required,oneof=user user-assistant"`
+	Email    Email    `json:"email" validate:"required,email"`
+	Name     string   `json:"name" validate:"required"`
+	Role     string   `json:"role" validate:"required,oneof=admin bride event_organizer"`
+	Password Password `json:"password" validate:"required"`
 }
 
 func (ui *UserInput) SaveTo(ctx context.Context, repo UserRepository) (result *User, err error) {

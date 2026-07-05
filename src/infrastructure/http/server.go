@@ -52,8 +52,9 @@ func RunDashboardAPI(container di.Container, config *pkg.Config) {
 	api := server.Group("/api/v1")
 
 	dashboard.RegisterEventRoutes(container, api)
+	dashboard.RegisterGuestRoutes(container, api)
 	guest.RegisterGuestRoutes(container, api)
-	//dashboard.RegisterUserRoutes(container, api)
+	dashboard.RegisterAuthRoutes(container, api)
 	//dashboard.RegisterWalletRoutes(container, api)
 	//dashboard.RegisterTransactionRoutes(container, api)
 	//dashboard.RegisterAuthRoutes(container, api)

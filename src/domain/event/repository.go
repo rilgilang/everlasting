@@ -17,3 +17,9 @@ type WishingWallMessageRepository interface {
 	Create(ctx context.Context, message *WishingWallMessage) (*WishingWallMessage, error)
 	GetAllByEventID(ctx context.Context, id string) ([]WishingWallMessage, error)
 }
+
+type UserEventRepository interface {
+	GetOneByUserID(ctx context.Context, id identity.ID) (*UserEvent, error)
+	CreateUserEvents(ctx context.Context, eventIds []string, userId string) error
+	UpdateByUserId(ctx context.Context, eventIds []string, userId string) error
+}

@@ -13,6 +13,7 @@ var (
 	ErrValidation error = errors.New("validation error")
 
 	ErrEventNotFound error = errors.New("event not found")
+	ErrGuestNotFound error = errors.New("guest not found")
 
 	ErrWalletNotFound      error = errors.New("wallet not found")
 	ErrWalletAlreadyExists error = errors.New("wallet already exists")

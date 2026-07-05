@@ -2,6 +2,10 @@ package dashboard
 
 import (
 	"encoding/json"
+	errDomain "everlasting/src/domain/error"
+	"everlasting/src/domain/sharedkernel/identity"
+	"everlasting/src/domain/sharedkernel/marshaler"
+	"net/http"
 
 	"everlasting/src/domain/user"
 	"everlasting/src/infrastructure/http/middleware"
@@ -62,18 +66,48 @@ func loginHandler(c echo.Context) (err error) {
 func generateHandler(c echo.Context) (err error) {
 	defer c.Request().Body.Close()
 
-	credential := new(user.Credential)
-	err = json.NewDecoder(c.Request().Body).Decode(credential)
+	var (
+		container      = c.Get(string(middleware.MiddlewareValueContainer)).(di.Container)
+		userRepository = container.Get("persistence.user").(*persistence.UserPersistence)
+		cc             = c.Get(string(middleware.MiddlewareValueAppLoggerContext)).(*logger.AppLoggerContext)
+		ctx            = cc.GetContext()
+	)
+
+	input := new(user.UserInput)
+	if err := c.Bind(input); err != nil {
+		return c.String(http.StatusBadRequest, "bad request")
+	}
+
+	if err := c.Validate(input); err != nil {
+		return err
+	}
+
+	generated, err := user.NewCipherTextFromPassword(input.Password)
 	if err != nil {
 		return err
 	}
 
-	generated, err := user.NewCipherTextFromPassword(credential.Password)
-	if err != nil {
+	_, err = input.Email.GetMatchedUserIn(ctx, userRepository)
+	if err != nil && err != errDomain.ErrUserNotFound {
 		return err
 	}
 
-	return routes.JsonResponse(c, generated, "Ok", "ok", 200, nil)
+	user := user.User{
+		ID:         identity.NewID(),
+		Email:      input.Email,
+		Name:       input.Name,
+		Role:       user.UserRole(input.Role),
+		Status:     "active",
+		CreatedAt:  marshaler.JsonTime{},
+		UpdatedAt:  marshaler.JsonTime{},
+		CipherText: generated,
+	}
+
+	if _, err := user.SaveTo(ctx, userRepository); err != nil {
+		return err
+	}
+
+	return routes.JsonResponse(c, input, "Ok", "ok", 201, nil)
 }
 
 func RegisterAuthRoutes(container di.Container, server *echo.Group) {

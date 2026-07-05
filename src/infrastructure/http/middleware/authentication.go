@@ -2,7 +2,10 @@ package middleware
 
 import (
 	"encoding/base64"
+	errDomain "everlasting/src/domain/error"
+	"everlasting/src/domain/sharedkernel/identity"
 	"net/http"
+	"slices"
 	"strings"
 
 	userDomain "everlasting/src/domain/user"
@@ -15,6 +18,9 @@ import (
 
 const MESSAGE_MISSING_HEADER = "Missing Authorization header"
 const MESSAGE_INVALID_HEADER = "Invalid Authorization header"
+const MESSAGE_INVALID_EVENT_ID = "Invalid Event ID"
+const MESSAGE_SERVER_ERROR = "Internal Server Error"
+const MESSAGE_NOT_FOUND = "Not Found"
 
 func BearerAuthenticationMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -48,6 +54,35 @@ func BearerAuthenticationMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		c.Set("user_id", user.ID.String())
+		c.Set("role", user.Role)
+
+		// Continue to the next handler
+		return next(c)
+	}
+}
+
+func UserCheckEventMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		var (
+			container           = c.Get(string(MiddlewareValueContainer)).(di.Container)
+			userEventRepository = container.Get("persistence.user_event").(*persistence.UserEventPersistence)
+			userId              = c.Get("user_id").(string)
+			eventId             = c.Param("event_id")
+		)
+
+		ctx := c.Request().Context()
+
+		userEvents, err := userEventRepository.GetOneByUserID(ctx, identity.FromStringOrNil(userId))
+		if err != nil {
+			if err == errDomain.ErrEventNotFound {
+				return echo.NewHTTPError(http.StatusNotFound, MESSAGE_NOT_FOUND)
+			}
+			return echo.NewHTTPError(http.StatusInternalServerError, MESSAGE_SERVER_ERROR)
+		}
+
+		if !slices.Contains(userEvents.EventId, eventId) {
+			return echo.NewHTTPError(http.StatusNotFound, MESSAGE_NOT_FOUND)
+		}
 
 		// Continue to the next handler
 		return next(c)

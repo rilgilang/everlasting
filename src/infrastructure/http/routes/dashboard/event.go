@@ -76,7 +76,6 @@ func updateEventHandler(c echo.Context) (err error) {
 
 func getEventDetailHandler(c echo.Context) (err error) {
 	defer c.Request().Body.Close()
-
 	// Load container
 	var (
 		container       = c.Get(string(middleware.MiddlewareValueContainer)).(di.Container)
@@ -86,7 +85,7 @@ func getEventDetailHandler(c echo.Context) (err error) {
 	cc := c.Get(string(middleware.MiddlewareValueAppLoggerContext)).(*logger.AppLoggerContext)
 	ctx := cc.GetContext()
 
-	id := event.EventID(c.Param("id"))
+	id := event.EventID(c.Param("event_id"))
 	if id == "" {
 		return c.String(http.StatusInternalServerError, "ID should not be empty")
 	}
@@ -157,12 +156,11 @@ func getWishingWallMessage(c echo.Context) (err error) {
 
 func RegisterEventRoutes(container di.Container, server *echo.Group) {
 	event := server.Group("/event")
-	//event.Use(middleware.BearerAdminAuthenticationMiddleware)
+	event.Use(middleware.BearerAuthenticationMiddleware)
 
-	//event.GET("/:id", getUserByIDHandler)
-	event.PATCH("/:id", updateEventHandler)
-	event.GET("/:id", getEventDetailHandler)
+	event.PATCH("/:event_id", updateEventHandler, middleware.UserCheckEventMiddleware)
+	event.GET("/:event_id", getEventDetailHandler, middleware.UserCheckEventMiddleware)
 	event.POST("", createEventHandler)
 	event.GET("", getEventList)
-	event.GET("/:id/wishing-wall", getWishingWallMessage)
+	event.GET("/:event_id/wishing-wall", getWishingWallMessage, middleware.UserCheckEventMiddleware)
 }

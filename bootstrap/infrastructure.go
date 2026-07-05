@@ -55,11 +55,36 @@ func loadPersistence(builder *di.Builder, config *pkg.Config) {
 			},
 		},
 		{
+			Name:  "persistence.guest",
+			Scope: di.App,
+			Build: func(ctn di.Container) (interface{}, error) {
+				guestPersistence := persistence.NewGuestPersistence(
+					ctn.Get("adapter.postgres").(*sqlx.DB),
+					ctn.Get("logger.app").(*logger.AppLogger),
+				)
+
+				return guestPersistence, nil
+			},
+		},
+		{
 			Name:  "persistence.wishing_wall_message",
 			Scope: di.App,
 			Build: func(ctn di.Container) (interface{}, error) {
 				// Connect to persistence
 				transactionPersistence := persistence.NewWishingWallMessagePersistence(
+					ctn.Get("adapter.postgres").(*sqlx.DB),
+					ctn.Get("logger.app").(*logger.AppLogger),
+				)
+
+				return transactionPersistence, nil
+			},
+		},
+		{
+			Name:  "persistence.user_event",
+			Scope: di.App,
+			Build: func(ctn di.Container) (interface{}, error) {
+				// Connect to persistence
+				transactionPersistence := persistence.NewUserEventPersistence(
 					ctn.Get("adapter.postgres").(*sqlx.DB),
 					ctn.Get("logger.app").(*logger.AppLogger),
 				)

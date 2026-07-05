@@ -608,6 +608,7 @@ const docTemplate = `{
             "required": [
                 "email",
                 "name",
+                "password",
                 "role"
             ],
             "properties": {
@@ -617,11 +618,15 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "password": {
+                    "type": "string"
+                },
                 "role": {
                     "type": "string",
                     "enum": [
-                        "user",
-                        "user-assistant"
+                        "admin",
+                        "bride",
+                        "event_organizer"
                     ]
                 }
             }

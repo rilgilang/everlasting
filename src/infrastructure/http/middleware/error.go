@@ -28,6 +28,8 @@ func NewErrorAttributes(status int, code, message string) *ErrorAttributes {
 
 var ErrorMap map[error]ErrorAttributes = map[error]ErrorAttributes{
 	errDomain.ErrValidation:                       *NewErrorAttributes(400, "invalid_input", "Please check your input"),
+	errDomain.ErrEventNotFound:                    *NewErrorAttributes(404, "event_not_found", "Event not found"),
+	errDomain.ErrGuestNotFound:                    *NewErrorAttributes(404, "guest_not_found", "Guest not found"),
 	errDomain.ErrWalletNotFound:                   *NewErrorAttributes(404, "wallet_not_found", "We can't find your wallet"),
 	errDomain.ErrWalletAlreadyExists:              *NewErrorAttributes(409, "wallet_exists", "Wallet already exists"),
 	errDomain.ErrInsufficientBalance:              *NewErrorAttributes(409, "insufficient balance", "Insufficient balance"),
