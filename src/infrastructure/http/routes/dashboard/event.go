@@ -95,7 +95,7 @@ func getEventDetailHandler(c echo.Context) (err error) {
 	if err != nil {
 		return err
 	}
-	return routes.JsonResponse(c, result, "Ok", "ok", 201, nil)
+	return routes.JsonResponse(c, result, "Ok", "ok", 200, nil)
 }
 
 func getEventList(c echo.Context) (err error) {
